@@ -1,0 +1,171 @@
+## SERVER: tiger
+## EXAMPLE: /BiO/BioProjects/TBD180101-SCHU-Fungi-smallRNA-20180322
+
+## ANALYSIS WORKFLOW
+
+1. Copy to Working Dir
+
+├── NSSP.conf
+├── NSSP.py
+├── NSSP_util
+│   ├── CalculationOfFPKM.py
+│   ├── SAMTOOLSConsensusSequence.v.1.0.0.py
+│   ├── SAMTOOLSConsensusSequence.v.1.0.1.py
+│   ├── SAMTOOLSConsensusSequence_NoGap.py
+│   ├── SequenceInfo.fasta.py
+│   ├── addReadCnt.py
+│   ├── bamStatsInfo.py
+│   ├── clc_sequence_info
+│   ├── do_mergeExpAnno.py
+│   ├── extGenName4sRNA.py
+│   ├── extGenName4sRNA_multi.py
+│   ├── modMergedConsensus.py
+│   └── smRNA_filter.py
+└── README
+
+2. Ready for NSSP Run
+
+$source activate smrna
+$ln -s [/BiO/BioResources/References/Fusarium_graminearumph1v32/F_graminearumph1v32_biomax_1/F_graminearumph1v32_biomax_1.chr.fa] ref.fa
+$ln -s [p3_p13839_Fus_grami_v32.gtf] ref.gtf
+$bowtie2-build ref.fa ref.fa
+
+3. RawData CleanUp (paired end -> 50bp single end)
+
+4. modified conf file
+######################################
+#
+#  NSSP
+#  Non-human Species Smallrna-seq Pipeline
+#  small RNA seq PIPELINE (hardcoding)
+#  For Non-model species
+#
+# [SAMPLE_ID] [PATH]
+#
+######################################
+OE348GFP-2 /BiO/BioProjects/TBD180101-SCHU-Fungi-smallRNA-20180322/RawData/Trimming/trimmedFqFiles/OE348GFP-2_1.fq.gz
+R7491_3 /BiO/BioProjects/TBD180101-SCHU-Fungi-smallRNA-20180322/RawData/Trimming/trimmedFqFiles/R7491_3_1.fq.gz
+
+5. RUN
+
+$python NSSP.py NSSP.conf
+
+## RESULT
+├── do_cutadapt
+│   ├── OE348GFP-2
+│   │   ├── OE348GFP-2.clean.fastq (FINAL)
+│   │   ├── OE348GFP-2.clean.fastq.log
+│   │   ├── OE348GFP-2.clean.fastq.SeqInfo
+│   │   ├── OE348GFP-2.clean.pre.fastq
+│   │   ├── OE348GFP-2.clean.pre.fastq.log
+│   │   ├── OE348GFP-2.fragments.fastq
+│   │   └── OE348GFP-2.short.fastq
+│   └── R7491_3
+│       ├── R7491_3.clean.fastq (FINAL)
+│       ├── R7491_3.clean.fastq.log
+│       ├── R7491_3.clean.fastq.SeqInfo
+│       ├── R7491_3.clean.pre.fastq
+│       ├── R7491_3.clean.pre.fastq.log
+│       ├── R7491_3.fragments.fastq
+│       └── R7491_3.short.fastq
+├── do_bowtie2
+│   ├── OE348GFP-2
+│   │   ├── OE348GFP-2.bowtie2.bam
+│   │   ├── OE348GFP-2.bowtie2.sam
+│   │   ├── OE348GFP-2.bowtie2.sam.log
+│   │   ├── OE348GFP-2.bowtie2.sorted.bam
+│   │   └── OE348GFP-2.bowtie2.sorted.bam.stats
+│   └── R7491_3
+│       ├── R7491_3.bowtie2.bam
+│       ├── R7491_3.bowtie2.sam
+│       ├── R7491_3.bowtie2.sam.log
+│       ├── R7491_3.bowtie2.sorted.bam
+│       └── R7491_3.bowtie2.sorted.bam.stats
+├── do_extConSeq
+│   ├── merged.bam
+│   ├── merged.consensus.fa
+│   ├── merged.consensus_mod.fa
+│   ├── merged.consensus_mod.fa.1.bt2
+│   ├── merged.consensus_mod.fa.2.bt2
+│   ├── merged.consensus_mod.fa.3.bt2
+│   ├── merged.consensus_mod.fa.4.bt2
+│   ├── merged.consensus_mod.fa.bt2.log
+│   ├── merged.consensus_mod.fa.rev.1.bt2
+│   ├── merged.consensus_mod.fa.rev.2.bt2
+│   ├── merged.consensus_mod.fa.SeqInfo
+│   └── merged.sorted.bam
+├── do_expConSeq
+│   ├── OE348GFP-2
+│   │   ├── OE348GFP-2.bowtie2.bam
+│   │   ├── OE348GFP-2.bowtie2.sam
+│   │   ├── OE348GFP-2.bowtie2.sam.log
+│   │   ├── OE348GFP-2.bowtie2.sorted.bam
+│   │   ├── OE348GFP-2.bowtie2.sorted.bam.bai
+│   │   ├── OE348GFP-2.bowtie2.sorted.bam.FPKM.xls
+│   │   ├── OE348GFP-2.bowtie2.sorted.bam.idxstats
+│   │   ├── OE348GFP-2.bowtie2.sorted.bam.ReadCnt.xls
+│   │   └── OE348GFP-2.bowtie2.sorted.bam.stats
+│   └── R7491_3
+│       ├── R7491_3.bowtie2.bam
+│       ├── R7491_3.bowtie2.sam
+│       ├── R7491_3.bowtie2.sam.log
+│       ├── R7491_3.bowtie2.sorted.bam
+│       ├── R7491_3.bowtie2.sorted.bam.bai
+│       ├── R7491_3.bowtie2.sorted.bam.FPKM.xls
+│       ├── R7491_3.bowtie2.sorted.bam.idxstats
+│       ├── R7491_3.bowtie2.sorted.bam.ReadCnt.xls
+│       └── R7491_3.bowtie2.sorted.bam.stats
+├── do_multiExp
+│   └── multi.Exp
+├── do_annoGene
+│   ├── extGenName4sRNA_result.supercontig_3.1
+│   ├── extGenName4sRNA_result.supercontig_3.10
+│   ├── extGenName4sRNA_result.supercontig_3.11
+│   ├── extGenName4sRNA_result.supercontig_3.12
+│   ├── extGenName4sRNA_result.supercontig_3.13
+│   ├── extGenName4sRNA_result.supercontig_3.14
+│   ├── extGenName4sRNA_result.supercontig_3.15
+│   ├── extGenName4sRNA_result.supercontig_3.16
+│   ├── extGenName4sRNA_result.supercontig_3.17
+│   ├── extGenName4sRNA_result.supercontig_3.18
+│   ├── extGenName4sRNA_result.supercontig_3.19
+│   ├── extGenName4sRNA_result.supercontig_3.2
+│   ├── extGenName4sRNA_result.supercontig_3.20
+│   ├── extGenName4sRNA_result.supercontig_3.21
+│   ├── extGenName4sRNA_result.supercontig_3.22
+│   ├── extGenName4sRNA_result.supercontig_3.24
+│   ├── extGenName4sRNA_result.supercontig_3.25
+│   ├── extGenName4sRNA_result.supercontig_3.26
+│   ├── extGenName4sRNA_result.supercontig_3.27
+│   ├── extGenName4sRNA_result.supercontig_3.28
+│   ├── extGenName4sRNA_result.supercontig_3.29
+│   ├── extGenName4sRNA_result.supercontig_3.3
+│   ├── extGenName4sRNA_result.supercontig_3.31
+│   ├── extGenName4sRNA_result.supercontig_3.4
+│   ├── extGenName4sRNA_result.supercontig_3.5
+│   ├── extGenName4sRNA_result.supercontig_3.6
+│   ├── extGenName4sRNA_result.supercontig_3.7
+│   ├── extGenName4sRNA_result.supercontig_3.8
+│   ├── extGenName4sRNA_result.supercontig_3.9
+│   ├── extGenName4sRNA_result.xls (FINAL)
+│   └── temp
+├── do_mergeExpAnno
+│   ├── smRNAs.d100.xls
+│   └── smRNAs.xls
+├── do_summary
+│   ├── Clean
+│   │   ├── Clean.SeqInfo.Report
+│   │   ├── OE348GFP-2.clean.fastq -> /BiO/BioProjects/TBD180101-SCHU-Fungi-smallRNA-20180322/do_cutadapt/OE348GFP-2/OE348GFP-2.clean.fastq
+│   │   └── R7491_3.clean.fastq -> /BiO/BioProjects/TBD180101-SCHU-Fungi-smallRNA-20180322/do_cutadapt/R7491_3/R7491_3.clean.fastq
+│   ├── ExtConSeq
+│   │   ├── extconseq.SeqInfo.Report
+│   │   └── merged.consensus_mod.fa -> /BiO/BioProjects/TBD180101-SCHU-Fungi-smallRNA-20180322/do_extConSeq/merged.consensus_mod.fa
+│   ├── Mapping
+│   │   ├── Mapping.MapInfo.Report
+│   │   ├── OE348GFP-2.bowtie2.bam -> /BiO/BioProjects/TBD180101-SCHU-Fungi-smallRNA-20180322/do_bowtie2/OE348GFP-2/OE348GFP-2.bowtie2.bam
+│   │   └── R7491_3.bowtie2.bam -> /BiO/BioProjects/TBD180101-SCHU-Fungi-smallRNA-20180322/do_bowtie2/R7491_3/R7491_3.bowtie2.bam
+│   ├── Raw
+│   │   ├── OE348GFP-2_1.fq.gz -> /BiO/BioProjects/TBD180101-SCHU-Fungi-smallRNA-20180322/RawData/Trimming/trimmedFqFiles/OE348GFP-2_1.fq.gz
+│   │   ├── R7491_3_1.fq.gz -> /BiO/BioProjects/TBD180101-SCHU-Fungi-smallRNA-20180322/RawData/Trimming/trimmedFqFiles/R7491_3_1.fq.gz
+│   │   └── Raw.SeqInfo.Report
+│   └── smRNAs.xls -> /BiO/BioProjects/TBD180101-SCHU-Fungi-smallRNA-20180322/do_mergeExpAnno/smRNAs.xls

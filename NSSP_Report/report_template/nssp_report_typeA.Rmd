@@ -1,0 +1,184 @@
+---
+params:
+  dmonth:
+    value: dmonth
+  dday:
+    value: dday
+  project_id:
+    value: project_id
+  data_path:
+    value: data_path
+  species_name:
+    value: species_name
+  ref_source:
+    value: ref_source
+  report_path:
+    value: report_path
+title: "smallRNA-Seq for Not-Annotated Species Analysis Report"
+author: "`r params$project_id`"
+date: '`r strftime(Sys.time(), format = "%B %d, %Y")`'
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: 3
+    latex_engine: xelatex
+    df_print: kable
+    highlight: tango
+    fig_caption: yes
+header-includes:
+  - \usepackage{kotex}
+  - \setmainfont{NanumGothic}
+  - \setmainhangulfont{NanumGothic}
+  
+  - \usepackage{graphicx}
+  - \newsavebox{\tbilogo}
+  - \sbox{\tbilogo}{\includegraphics[scale=0.1]{"`r paste(params$report_path,'img','Theragen_logo.eps', sep = '/')`"}}
+  
+  - \usepackage{fancyhdr}
+  - \pagestyle{fancy}
+  
+  - \setlength{\headheight}{0.2in}
+  - \setlength{\textheight}{9.0in}
+  - \setlength{\voffset}{0.2in}
+  
+  - \fancyhead{}
+  - \fancyhead[LE,LO]{\textsl{\leftmark}}
+  #- \fancyhead[RE,RO]{\usebox{\tbilogo}}
+  - \fancyhead[RE,RO]{`r params$project_id`}
+  - \renewcommand{\headrulewidth}{0.4pt}
+  - \fancyfoot{}
+  - \fancyfoot[R]{\textbf{\thepage}}
+  - \fancyfoot[L]{\textsl{Copyright©2018 TheragenEtex.}}
+  - \renewcommand{\footrulewidth}{0pt}
+fontsize: 12pt
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+if (!require(tidyverse)) install.packages("tidyverse")
+if (!require(xtable)) install.packages("xtable")
+if (!require(knitr)) install.packages("knitr")
+if (!require(png)) install.packages("png")
+
+library(tidyverse)
+options(scipen = 999, stringsAsFactors = FALSE)
+library(xtable)
+library(knitr)
+library(png)
+
+```
+
+\newpage
+
+# General Information
+In traditional small RNA analysis methods using small RNA-Seq data, a small RNA database such as miRBase is essential.
+Therefore, there was a difficulty in analyzing the small RNA of a species that does not have a database. The species that do not have such a small RNA database will be called non-annotated species. So, we had developed small RNA analysis methods using small RNA-Seq data in these species.
+This method uses the genome sequence and gene coordination information to identify the loci of small RNAs and calculate their expression levels. It also provides information on which genes can be biologically affected using genomic location information of identified small RNAs.
+This data is expected to provide insight into newly studied species.
+
+## Sample Information
+```{r sam_info, results='asis', echo=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+raw_stats_fn <- paste(params$data_path, "Raw", "Raw.SeqInfo.Report", sep = "/")
+raw_stats_data <- read.table(raw_stats_fn, sep = "\t", header = T)
+knitr::kable(raw_stats_data[,c(1,2,3,9)], caption = "Sample Informations", align = "c", "pandoc")
+
+```
+
+- SampleName : Sample ID provided by customer
+- No.Seqs : Number of sequences (reads or contigs)
+- Residues : Total number of base-pairs
+- GC : Ratio of GC
+
+## Reference Information
+- Species name : `r params$species_name`
+- Reference source : `r params$ref_source`
+
+\newpage
+
+# Analysis Method
+
+## Pipeline Descriptions
+
+![analysis pipeline.](`r paste(params$report_path, "img","NSSP_workflow.png", sep = '/')`){width=80%}
+
+  1. Preprocessing : Low quality reads were filtered according to the following criteria
+    - Sequencing quality < Q20
+    - minimum read length < 17bp
+    - trim 4bp from 5' and 3'
+  2. Reference mapping : Map on to the genome
+  3. Extract consensus : Extract consensus sequence based on alignment information of all samples.
+  4. Estimate Abundant : Align the extracted consensus sequence once again for each sample. Thereafter, RPKM is calculated based on the alignment information.
+  5. Annotate neighbor genes : Based on the alignment information, annotation is made of which genes are present around the confirmed small rna locus.
+
+\newpage
+
+# Analysis Result
+
+## Preprocessing
+```{r preprocessing, results='asis', echo=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+clean_stats_fn <- paste(params$data_path, "Clean", "Clean.SeqInfo.Report", sep = "/")
+clean_stats_data <- read.table(clean_stats_fn, sep = "\t", header = T)
+knitr::kable(clean_stats_data[,c(1,2,3,9)], caption = "Preprocessing Results", align = "c", "pandoc")
+
+```
+
+- No. Seqs : Number of reads remaining after preprocessing
+- Residues : The remaining base pairs after preprocessing
+- GC : GC ratio after preprocessing
+
+## Reference mapping 
+```{r reference_mapping, results='asis', echo=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+map_stats_fn <- paste(params$data_path, "Mapping", "Mapping.MapInfo.Report", sep = "/")
+map_stats_data <- read.table(map_stats_fn, sep = "\t", header = T)
+knitr::kable(map_stats_data, caption = "Mapping Statistics", align = "c", "pandoc")
+
+```
+
+- TotalReads : The total number of reads used in the reference mapping
+- MappedReads : Number of reads aligned to reference genome
+- MappedRate : (MappedReads/TotalReads)*100
+
+## Extract consensus
+```{r extract_consensus, results='asis', echo=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+extconseq_stats_fn <- paste(params$data_path, "ExtConSeq", "extconseq.SeqInfo.Report", sep = "/")
+extconseq_stats_data <- read.table(extconseq_stats_fn, sep = "\t", header = T)
+knitr::kable(extconseq_stats_data, caption = "Extract consensus sequence result", align = "c", "pandoc")
+
+```
+
+- No.Seqs : The number of consensus extracted from the alignment information in all samples. This means the entire candidate smRNA locus.
+- Residues : The number of consensus base-pairs
+- Average/Minimum/Maximum/N50 : The average/min/max/N50 length of the consensus sequence (candidate smRNA locus).
+- Npct : ratio of N base in consensus sequence
+- GC : ratio of GC base in consensus sequence
+
+## Candidate of smallRNAs
+```{r candidate_of_smRNAs, results='asis', echo=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+smrna_fn <- paste(params$data_path, "smRNAs.xls", sep = "/")
+smrna_data <- read.table(smrna_fn, sep = "\t", header = T)
+smrna_sub <- smrna_data[c(1,2,3,4,5),c(1,2,3,4,5)]
+smrna_sub <- cbind(smrna_sub, "..."=c("...","...","...","...","..."))
+knitr::kable(smrna_sub, align = "c", "pandoc")
+
+```
+
+- smRNA_candidate : The ID of the candidate small RNA locus, consisting of [contig] _ [start] - [end].
+- contig : The contig ID where the candidate small RNA locus is located.
+- start/end : The genomic location where the candidate small RNA locus is located.
+- length : Length(bp) of candidate small RNA locus
+- ReadCnt:[SampleName] : The mapped read count on the candidate small RNA locus
+- type : The relationship between the locus of the candidate small RNA and the location of the gene.
+- gap : the distance between genes involved in the candidate small RNA
+- gene : genes involved in the candidate small RNA
+- conseq : consensus sequence of smRNA locus
